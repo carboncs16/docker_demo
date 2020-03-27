@@ -6,10 +6,15 @@
 const express = require('express');
 const child_process = require('child_process');
 const app = express();
+const Docker = require('dockerode');
+const docker = Docker({socketPath: '/var/run/docker.sock'});
 const port = 3000;
 app.post('/:imageName', (req, res) => {
     const { imageName } = req.params;
-    child_process.exec(`curl -XPOST --unix-socket /var/run/docker.sock http://localhost/containers/${imageName}/start`,
-    (_, stdout) => res.send(stdout));
+    let container = docker.getContainer(imageName);
+    container.start((err, data) => {
+        if (err) throw err;
+        res.send(data);
+    });
 });
 app.listen(port, () => console.log(`listening on http://localhost:${port}`));
